@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Segredos
+.env
+
+# Gerados: dataset baixado, caches de scores/modelos e resultados dos experimentos
+data/
+resultados/

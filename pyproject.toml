@@ -1,0 +1,53 @@
+[project]
+name = "rag-knapsack"
+version = "0.1.0"
+description = "Seleção de contexto em RAG como Problema da Mochila 0/1 (Top-K, Greedy, Knapsack DP), avaliada no HotpotQA"
+readme = "README.md"
+authors = [
+    { name = "Eduardo Leal de Carvalho", email = "eduardocarvalho.aluno@unipampa.edu.br" },
+    { name = "Rafael Nogueira Rodrigues", email = "rafaelnogueira.aluno@unipampa.edu.br" },
+    { name = "Yang da Fontoura Rodrigues", email = "yangrodrigues.aluno@unipampa.edu.br" },
+]
+requires-python = ">=3.12"
+dependencies = [
+    "agno>=3.1.3",
+    "fastembed>=0.9.0",
+    "openai>=3.31.0",
+    "python-dotenv>=1.2.4",
+    "streamlit>=1.66.1",
+    "tiktoken>=0.14.0",
+]
+
+[project.scripts]
+rag-knapsack = "rag_knapsack.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.33,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "taskipy>=1.14.1",
+]
+
+# Uso: `uv run task <nome> [argumentos extras]`, por exemplo `uv run task topk --n 50`.
+[tool.taskipy.settings]
+cwd = "."  # as tasks rodam na raiz do projeto, de qualquer subpasta
+
+[tool.taskipy.tasks]
+topk = { cmd = "python -m rag_knapsack.cli --algoritmo topk", help = "Experimento só com o Top-K" }
+greedy = { cmd = "python -m rag_knapsack.cli --algoritmo greedy", help = "Experimento só com o Greedy" }
+knapsack = { cmd = "python -m rag_knapsack.cli --algoritmo knapsack", help = "Experimento só com o Knapsack DP" }
+avaliar = { cmd = "python -m rag_knapsack.experimento", help = "Compara os três algoritmos em vários orçamentos (evals)" }
+painel = { cmd = "streamlit run src/rag_knapsack/painel.py", help = "Abre o painel Streamlit com os resultados" }
+dados = { cmd = "python -m rag_knapsack.dados baixar", help = "Baixa o HotpotQA (dev, cenário distractor) para data/" }
+amostra = { cmd = "python -m rag_knapsack.dados amostra", help = "Regera a amostra fixa usada pelos testes" }
+test = { cmd = "pytest", help = "Roda os testes (os marcados com 'llm' chamam a API da OpenAI)" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v -rs"
+markers = [
+    "llm: chama a API da OpenAI (exige OPENAI_API_KEY; custa frações de centavo)",
+]
