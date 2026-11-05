@@ -41,6 +41,8 @@ greedy = { cmd = "python -m rag_knapsack.cli --algoritmo greedy", help = "Experi
 knapsack = { cmd = "python -m rag_knapsack.cli --algoritmo knapsack", help = "Experimento só com o Knapsack DP" }
 avaliar = { cmd = "python -m rag_knapsack.experimento", help = "Compara os três algoritmos em vários orçamentos (evals)" }
 painel = { cmd = "streamlit run src/rag_knapsack/painel.py", help = "Abre o painel Streamlit com os resultados" }
+assintotica = { cmd = "python -m rag_knapsack.assintotica", help = "Análise assintótica: tempo, memória e operações em função de n e T" }
+painel-assintotico = { cmd = "streamlit run src/rag_knapsack/painel_assintotico.py", help = "Abre o painel da análise assintótica" }
 dados = { cmd = "python -m rag_knapsack.dados baixar", help = "Baixa o HotpotQA (dev, cenário distractor) para data/" }
 amostra = { cmd = "python -m rag_knapsack.dados amostra", help = "Regera a amostra fixa usada pelos testes" }
 test = { cmd = "pytest", help = "Roda os testes (os marcados com 'llm' chamam a API da OpenAI)" }

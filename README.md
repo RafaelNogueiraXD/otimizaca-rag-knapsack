@@ -130,10 +130,11 @@ O experimento faz **uma chamada ao LLM por contexto distinto**: quando dois algo
 
 ### Testes
 
-`uv run task test` roda 45 testes:
+`uv run task test` roda 56 testes:
 - **Seletores:** exemplo de Brasília, Greedy que pula o que não cabe, empates, casos de borda e força bruta.
 - **Evals:** EM/F1 do script oficial, otimalidade, falhas contando como erro, deduplicação de chamadas e formato do experimento.
-- **Painel:** todas as abas renderizam (via `AppTest`).
+- **Painéis:** todas as abas dos dois painéis renderizam (via `AppTest`).
+- **Análise assintótica:** réplicas instrumentadas idênticas ao código, força bruta igual à DP, melhor e pior caso, ajustes de expoente e varreduras.
 - **HotpotQA:** para cada algoritmo, os três testes (seleção, EM/F1 e Agent-as-a-judge). O de seleção não chama o LLM, só os embeddings (com `EMBEDDER=openai` ele precisa da chave). Os de EM/F1 e do juiz chamam a API, são marcados com `llm` e são pulados sem `OPENAI_API_KEY`.
 
 ### Primeiros resultados
@@ -174,6 +175,63 @@ O que esses números já mostram:
 - **Sem chave da OpenAI:** `EMBEDDER=fastembed` com `--sem-llm` roda só a seleção, a otimalidade e o desempenho.
 
 Dados: HotpotQA (Yang et al., 2018), licença CC BY-SA 4.0. A amostra em `tests/fixtures/` é um recorte do conjunto dev.
+
+## Análise assintótica
+
+O painel principal compara qualidade e custo em tamanhos reais (10 candidatos por pergunta). A análise assintótica estuda como o custo de cada algoritmo **cresce** com o tamanho da entrada: o número de candidatos n e o orçamento T. Ela tem experimento e painel próprios, separados do resto.
+
+```bash
+uv run task assintotica           # 200 casos, n de 5 a 800, T de 128 a 8192 (~18 min)
+uv run task painel-assintotico    # abre o painel da análise assintótica
+```
+
+**Como funciona** (`src/rag_knapsack/assintotica.py`):
+- **Casos:** cada caso é uma pergunta do HotpotQA (até 200). A instância de tamanho n tem os parágrafos da pergunta e, além deles, parágrafos reais de outras perguntas, com seus pesos e scores reais. As instâncias de um caso são aninhadas, então cada curva mostra o mesmo caso crescendo.
+- **Tempo de relógio:** mediana de repetições, com o coletor de lixo desligado e o processo fixo num núcleo de desempenho.
+- **Operações elementares:** contadas por réplicas instrumentadas que executam os mesmos laços e ordenações de `seletores.py`. Isso inclui as comparações feitas pelo Timsort, as células da DP, as células que melhoram a solução, os passos de laço e a memória zerada. Em toda medição o experimento confere que a réplica escolhe exatamente os mesmos chunks que o código real.
+- **Memória e qualidade:** pico de memória (`tracemalloc`) e valor ÷ ótimo.
+- **Quatro varreduras:**
+  - **principal:** a grade n × T inteira;
+  - **força bruta:** 2ⁿ subconjuntos, com n até 20;
+  - **melhor × pior caso:** os extremos de cada algoritmo;
+  - **escala dos pesos:** pesos e T multiplicados por s, que mantém a mesma solução e testa a pseudo-polinomialidade.
+
+**Painel** (`uv run task painel-assintotico`), em 12 abas:
+- **Resumo:** expoentes medidos contra os previstos, com os algoritmos no eixo X.
+- **Teoria:** melhor e pior caso, Ω, recorrência, pseudo-polinomialidade, NP-completude, compromissos de espaço e a garantia do Greedy.
+- **Tempo × n** e **Tempo × T:** curvas em escala log-log e expoente local.
+- **Operações:** inclui o modelo de custo da DP.
+- **Mapa n × T.**
+- **Força bruta × DP:** com o teste da razão → 4.
+- **Melhor × pior caso.**
+- **Pseudo-polinomial.**
+- **Memória.**
+- **Qualidade × tamanho.**
+- **Metodologia e dados:** com a reprodutibilidade entre execuções e download em CSV.
+
+### Resultados (200 casos, 47.200 medidas, i7-13620H num P-core, Python 3.12)
+
+Os expoentes foram ajustados nas entradas grandes (n ≥ 100 e T ≥ 2048), sobre as medianas dos casos. Nessa faixa, n·log n ajustado como nᵃ dá **a ≈ 1,18**, e é com esse valor que se comparam os algoritmos que ordenam.
+
+| Algoritmo | Teoria (pior caso) | Operações medidas | Tempo medido |
+|---|---|---|---|
+| Top-K | Θ(n log n) | n^1,16 · T^0,00 | n^1,15 · T^0,00 |
+| Top-K com corte | Θ(n log n) | n^1,15 · T^0,00 | n^1,11 · T^0,02 |
+| Greedy | Θ(n log n) | n^1,04 · T^0,12 | n^0,96 · T^0,14 |
+| Knapsack DP | Θ(n·T) | n^1,00 · T^1,02 | n^0,86 · T^1,17 |
+| Força bruta (n ≥ 12) | Θ(2ⁿ) | 1,999ⁿ | 2,004ⁿ |
+
+O que os números mostram:
+- **Ordem de crescimento:** as operações confirmam as ordens da teoria. Os algoritmos que ordenam crescem como n log n e não dependem de T; o Greedy depende um pouco, porque com T maior escolhe mais chunks e a reordenação final custa mais, sempre limitada por O(n log n). O Knapsack fica em n^1,00 · T^1,02. Para a força bruta, as razões C(n) ÷ C(n−2) convergem para 4,00.
+- **Efeito de T pequeno no Knapsack:** com T pequeno, os parágrafos que não cabem ficam fora da DP. As células visitadas são 0,19·n·T com T = 128 e 0,98·n·T com T = 8192, e o expoente local em T cai de 2,4 para 1,02.
+- **Por que o tempo do Knapsack desvia de n·T:** uma célula que melhora a solução custa mais do que uma que não melhora. A fração de melhorias cai de 96% (n = 5) para 11% (n = 800). O modelo tempo ≈ c₁·células explica o tempo com erro mediano de 33%; tempo ≈ c₁·células + c₂·melhorias, com 6%. O tempo n^0,86 · T^1,17 é, portanto, uma constante que varia por célula, não outra ordem de crescimento.
+- **Melhor × pior caso:**
+  - Top-K: n^0,98 com a entrada já ordenada (799 comparações para n = 800, ou seja n − 1) contra n^1,18 com a entrada embaralhada. É o Θ(n) contra Θ(n log n) da teoria.
+  - Knapsack: n^0,20 quando nada cabe, Θ(n + T) com T fixo, contra n^0,99 quando tudo cabe.
+- **Pseudo-polinomial:** multiplicando pesos e T por s, a solução ótima não muda, mas as operações da DP crescem s^1,00. Cada bit a mais em T dobra o custo; Top-K e Greedy ficam em s^0,00.
+- **Força bruta × DP:** projetando com 2,004ⁿ, n = 200 levaria ~10⁴⁶ anos; a DP leva 2,4 ms com T = 512 (e 273 ms no maior caso medido, n = 800 com T = 8192).
+- **Reprodutibilidade:** duas execuções independentes deram expoentes de tempo que diferem no máximo 0,003. As operações são determinísticas.
+- **Qualidade:** o Greedy fica, em média, entre 95% do ótimo (n = 800, T = 128, quando cabem poucos chunks) e 100%. O pior caso individual foi 43%, e a garantia teórica (perda ≤ um chunk) vale em 100% dos casos. O Top-K com k = 4 cai para 4% do ótimo com n = 800 e T = 8192.
 
 ## Estrutura de Branches
 
