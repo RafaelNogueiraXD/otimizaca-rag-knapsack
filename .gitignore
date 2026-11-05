@@ -5,7 +5,3 @@ __pycache__/
 
 # Segredos
 .env
-
-# Gerados: dataset baixado, caches de scores/modelos e resultados dos experimentos
-data/
-resultados/

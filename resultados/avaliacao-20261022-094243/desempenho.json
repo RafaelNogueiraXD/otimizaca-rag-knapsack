@@ -1,0 +1,86 @@
+[
+  {
+    "algoritmo": "topk",
+    "orcamento": 256,
+    "ms_por_selecao": 0.009131050023825082,
+    "ms_por_selecao_mediana": 0.008989999969344353,
+    "memoria_pico_mib": 0.001812744140625
+  },
+  {
+    "algoritmo": "topk",
+    "orcamento": 512,
+    "ms_por_selecao": 0.00454222499683965,
+    "ms_por_selecao_mediana": 0.00444999977844418,
+    "memoria_pico_mib": 0.001812744140625
+  },
+  {
+    "algoritmo": "topk",
+    "orcamento": 1024,
+    "ms_por_selecao": 0.004588350088852167,
+    "ms_por_selecao_mediana": 0.004562999947665958,
+    "memoria_pico_mib": 0.001812744140625
+  },
+  {
+    "algoritmo": "greedy",
+    "orcamento": 256,
+    "ms_por_selecao": 0.005197000064072199,
+    "ms_por_selecao_mediana": 0.005123999926581746,
+    "memoria_pico_mib": 0.0014768600463867187
+  },
+  {
+    "algoritmo": "greedy",
+    "orcamento": 512,
+    "ms_por_selecao": 0.006205825002325582,
+    "ms_por_selecao_mediana": 0.006148000011307886,
+    "memoria_pico_mib": 0.00166015625
+  },
+  {
+    "algoritmo": "greedy",
+    "orcamento": 1024,
+    "ms_por_selecao": 0.007139249964893679,
+    "ms_por_selecao_mediana": 0.00703349996911129,
+    "memoria_pico_mib": 0.0018909454345703125
+  },
+  {
+    "algoritmo": "knapsack",
+    "orcamento": 256,
+    "ms_por_selecao": 0.06691905005027365,
+    "ms_por_selecao_mediana": 0.06862249983896618,
+    "memoria_pico_mib": 0.011009025573730468
+  },
+  {
+    "algoritmo": "knapsack",
+    "orcamento": 512,
+    "ms_por_selecao": 0.20074999995358667,
+    "ms_por_selecao_mediana": 0.2026064998972288,
+    "memoria_pico_mib": 0.021580982208251952
+  },
+  {
+    "algoritmo": "knapsack",
+    "orcamento": 1024,
+    "ms_por_selecao": 0.5255339001678294,
+    "ms_por_selecao_mediana": 0.5307505002747348,
+    "memoria_pico_mib": 0.0422764778137207
+  },
+  {
+    "algoritmo": "topk_corte",
+    "orcamento": 256,
+    "ms_por_selecao": 0.004893825007457053,
+    "ms_por_selecao_mediana": 0.004687499767896952,
+    "memoria_pico_mib": 0.001812744140625
+  },
+  {
+    "algoritmo": "topk_corte",
+    "orcamento": 512,
+    "ms_por_selecao": 0.0055782249773983494,
+    "ms_por_selecao_mediana": 0.005371500265027862,
+    "memoria_pico_mib": 0.001812744140625
+  },
+  {
+    "algoritmo": "topk_corte",
+    "orcamento": 1024,
+    "ms_por_selecao": 0.0060886750816280255,
+    "ms_por_selecao_mediana": 0.005950500053586438,
+    "memoria_pico_mib": 0.001812744140625
+  }
+]
